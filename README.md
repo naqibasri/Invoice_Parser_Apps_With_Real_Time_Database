@@ -29,10 +29,15 @@ pip install -r requirements.txt
 1. **Activate the virtual environment:**
 
 ```bash
-source venv/bin/activate  # On Windows, use venv\Scripts\activate
+source venv_invoice/bin/activate  # On Windows, use venv\Scripts\activate
 ```
 
-2. **Run the Streamlit app:**
+2. **Provide the GOOGLE_API_KEY**
+   * Create .env file
+   * Copy and paste your GOOGLE_API_KEY in the file
+     GOOGLE_API_KEY = ""
+
+4. **Run the Streamlit app:**
 
 ```bash
 streamlit run app.py
