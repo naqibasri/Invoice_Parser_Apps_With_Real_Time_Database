@@ -2,8 +2,12 @@ import streamlit as st
 from PIL import Image
 import pandas as pd
 import ast
-from utils import *
 import io
+from xlsxwriter import Workbook
+
+from utils import *
+from analysis import analysis
+from database import database
 
 def parser():
     st.title("Invoice Parser")
@@ -11,6 +15,16 @@ def parser():
         """
         Welcome to the Invoice Parser app! Upload one or more invoice images to extract relevant information.
         You will receive the parsed invoice data including the invoice number, date, total amount, and item details.
+        """
+    )
+
+    st.markdown(
+        """
+        **Guidelines for Usage:**
+        - Upload one or more invoice images (in JPG, JPEG, or PNG format).
+        - Click the "Parse All Invoices" button to extract information from uploaded invoices.
+        - If prompted, provide the requested information for each invoice.
+        - Once parsing is complete, you can download the summary Excel file containing parsed data.
         """
     )
     
@@ -27,7 +41,7 @@ def parser():
             try:
                 image = Image.open(uploaded_file)
                 
-                st.write(f"Parsing invoice {uploaded_file.name}... This may take a moment.")
+                st.write(f"**Parsing invoice {uploaded_file.name}...** This may take a moment.")
                 input_prompt = """
                     You are an invoice parser.
                     You will receive input images as invoices and
@@ -46,6 +60,7 @@ def parser():
                     responses.append(response)
                 
                 invoices_data.append({
+                    "File Name": uploaded_file.name,
                     "Invoice Number": responses[0],
                     "Invoice Date": responses[1],
                     "Invoice Total": responses[5]
@@ -55,26 +70,55 @@ def parser():
                     items = pd.DataFrame(ast.literal_eval(responses[2]))
                     line_items = pd.concat([line_items,items])
                 
-                st.success(f"Invoice {uploaded_file.name} parsed successfully!")
+                st.success(f"**Invoice {uploaded_file.name} parsed successfully!**")
             except Exception as e:
                 st.error(f"Error processing invoice {uploaded_file.name}: {e}")
     
         if invoices_data:
             df_list = pd.DataFrame(invoices_data)
-            st.write("List of Parsed Invoices:")
+            st.write("**List of Parsed Invoices:**")
             st.table(df_list)
 
             if len(line_items) > 0:
-                #df_items = pd.DataFrame(line_items)
-                #df_items = pd.DataFrame(line_items)
-                st.write("List of line items:")
+                st.write("**List of Line Items:**")
                 st.table(line_items)
 
             excel_file_obj = io.BytesIO()
-            with pd.ExcelWriter(excel_file_obj) as writer:
+            with pd.ExcelWriter(excel_file_obj, engine='xlsxwriter') as writer:
                 df_list.to_excel(writer, sheet_name='Invoices', index=False)
                 if len(line_items) > 0:
                     line_items.to_excel(writer, sheet_name='Line Items', index=False)
+                
+                # Enhance Excel file styling
+                workbook = writer.book
+                worksheet1 = writer.sheets['Invoices']
+                worksheet2 = writer.sheets['Line Items']
+                
+                # Add header formatting
+                header_format = workbook.add_format({
+                    'bold': True,
+                    'text_wrap': True,
+                    'valign': 'top',
+                    'fg_color': '#D7E4BC',  # Light green background color
+                    'border': 1
+                })
+
+                for col_num, value in enumerate(df_list.columns.values):
+                    worksheet1.write(0, col_num, value, header_format)
+
+                for col_num, value in enumerate(line_items.columns.values):
+                    worksheet2.write(0, col_num, value, header_format)
+
+                # Adjust column widths
+                for i, col in enumerate(df_list.columns):
+                    max_len = df_list[col].astype(str).str.len().max()
+                    max_len = max_len if max_len < 50 else 50
+                    worksheet1.set_column(i, i, max_len + 2)
+
+                for i, col in enumerate(line_items.columns):
+                    max_len = line_items[col].astype(str).str.len().max()
+                    max_len = max_len if max_len < 50 else 50
+                    worksheet2.set_column(i, i, max_len + 2)
                 
             excel_file_obj.seek(0)
             st.download_button(
@@ -83,22 +127,6 @@ def parser():
                 file_name="invoice_summary.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-
-def database():
-    st.title("Invoice Database")
-    st.write(
-        """
-        View and manage your parsed invoices in the database. Coming soon!
-        """
-    )
-
-def analysis():
-    st.title("Invoice Analysis")
-    st.write(
-        """
-        Analyze trends and insights from your parsed invoice data. Coming soon!
-        """
-    )
 
 def main():
     pages = {

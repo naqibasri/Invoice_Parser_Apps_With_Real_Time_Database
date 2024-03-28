@@ -1,4 +1,5 @@
 import google.generativeai as genai
+import streamlit as st
 
 ## Function to load OpenAI model and get respones
 
@@ -23,3 +24,4 @@ def input_image_setup(uploaded_file):
         return image_parts
     else:
         raise FileNotFoundError("No file uploaded")
+    
