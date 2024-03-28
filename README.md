@@ -12,7 +12,8 @@ To use the Invoice Parser App locally, follow these steps:
 
 ```bash
 git clone https://github.com/your-username/invoice-parser-app.git
-cd invoice-parser-app
+cd Invoice_Parser_Apps_With_Real_Time_Database
+```
 
 2. **Create a virtual environment based on the provided requirements.txt file:**
 
@@ -20,3 +21,23 @@ cd invoice-parser-app
 python -m venv venv
 source venv/bin/activate  # On Windows, use venv\Scripts\activate
 pip install -r requirements.txt
+```
+
+## How to use
+
+1. **Activate the virtual environment:**
+
+```bash
+source venv/bin/activate  # On Windows, use venv\Scripts\activate
+```
+
+2. **Run the Streamlit app:**
+
+```bash
+streamlit run app.py
+```
+
+## Additional Information
+* This project uses Streamlit, a Python library for building web applications, and the PIL (Python Imaging Library) for image processing.
+* Make sure to have Python installed on your system before setting up the project.
+* For any issues or feature requests, please feel free to open an issue on the GitHub repository.
